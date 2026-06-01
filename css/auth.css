@@ -1,0 +1,124 @@
+/* ============================================================
+   AUTH.CSS — Sign In / Sign Up pages
+   ============================================================ */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.auth-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.2;
+}
+.auth-orb-1 {
+  width: 400px;
+  height: 400px;
+  background: var(--brand);
+  top: -100px;
+  right: -100px;
+}
+.auth-orb-2 {
+  width: 300px;
+  height: 300px;
+  background: #0080ff;
+  bottom: -80px;
+  left: -80px;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 40px;
+  animation: fadeInUp 0.5s var(--ease) both;
+}
+
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  justify-content: center;
+  margin-bottom: 32px;
+  color: var(--text);
+}
+
+.auth-head {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.auth-head h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.auth-head p {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-footer-text {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-2);
+  margin-top: 20px;
+}
+.auth-footer-text a {
+  color: var(--brand);
+  font-weight: 600;
+}
+.auth-footer-text a:hover { text-decoration: underline; }
+
+.show-pass-btn {
+  background: none;
+  border: none;
+  padding: 0 10px;
+  cursor: pointer;
+  color: var(--text-3);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+.show-pass-btn:hover { color: var(--text-2); }
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-wrap .form-input { padding-right: 44px; }
+.input-wrap .show-pass-btn {
+  position: absolute;
+  right: 4px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ThalassemiaAI — Intelligent Blood Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/home.css" />
+</head>
+<body class="page-home" data-theme="dark">
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner container">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-dot"></span>
+        ThalassemiaAI
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works" class="nav-link">How it works</a>
+        <a href="auth/login.html" class="btn btn-ghost btn-sm">Sign in</a>
+        <a href="auth/register.html" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+      <button class="nav-burger" id="navBurger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="navMobile">
+      <a href="#how-it-works" class="nav-link">How it works</a>
+      <a href="auth/login.html" class="btn btn-ghost btn-sm">Sign in</a>
+      <a href="auth/register.html" class="btn btn-primary btn-sm">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-grid"></div>
+    </div>
+    <div class="container hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        AI-Powered Diagnosis
+      </div>
+      <h1 class="hero-title">
+        Detect Thalassemia<br />
+        <span class="hero-title-accent">From Blood Tests</span>
+      </h1>
+      <p class="hero-sub">
+        Enter CBC values or upload a lab report.<br />
+        Get an instant AI diagnosis with clinical recommendations.
+      </p>
+      <div class="hero-cta">
+        <a href="auth/register.html" class="btn btn-primary btn-lg">Start Analysis</a>
+        <a href="#how-it-works" class="btn btn-ghost btn-lg">Learn more</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-n">3</span>
+          <span class="stat-l">Input Methods</span>
+        </div>
+        <div class="stat-sep"></div>
+        <div class="stat">
+          <span class="stat-n">99%</span>
+          <span class="stat-l">Model Confidence</span>
+        </div>
+        <div class="stat-sep"></div>
+        <div class="stat">
+          <span class="stat-n">Instant</span>
+          <span class="stat-l">Results</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-tag">Process</p>
+        <h2 class="section-title">Three steps to your diagnosis</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-icon">🔬</div>
+          <h3>Enter CBC Values</h3>
+          <p>Input HGB, MCV, MCH, and RBC values manually, or upload a CSV/Excel file for batch processing.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-icon">🤖</div>
+          <h3>AI Analysis</h3>
+          <p>Our machine learning model calculates clinical indices and runs diagnosis against trained patterns.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-icon">📋</div>
+          <h3>Get Results</h3>
+          <p>Receive diagnosis, confidence score, risk category, and personalized clinical recommendations.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-tag">Features</p>
+        <h2 class="section-title">Everything you need</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⌨️</div>
+          <h3>Manual Entry</h3>
+          <p>Enter 4 CBC values directly. Instant validation and real-time feedback.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📁</div>
+          <h3>Batch Upload</h3>
+          <p>Upload CSV or Excel files with multiple patients. Get all results at once.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🖼️</div>
+          <h3>Image OCR</h3>
+          <p>Photograph a lab report. Our OCR automatically extracts CBC values.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>History Dashboard</h3>
+          <p>Track all predictions over time with trend analysis and risk statistics.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Secure & Private</h3>
+          <p>All data encrypted. Row-level security ensures only you see your data.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Works Everywhere</h3>
+          <p>Fully responsive. Desktop, tablet, and mobile friendly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="nav-logo"><span class="logo-dot"></span>ThalassemiaAI</span>
+      <p class="footer-note">For clinical support purposes only. Not a replacement for medical advice.</p>
+    </div>
+  </footer>
+
+  <script src="js/nav.js"></script>
+</body>
+</html>

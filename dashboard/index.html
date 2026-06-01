@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — ThalassemiaAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-theme="dark">
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="../index.html" class="sidebar-logo">
+      <span class="logo-dot"></span>
+      ThalassemiaAI
+    </a>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-item" data-path="dashboard/index">
+        <span class="si-icon">📊</span> Dashboard
+      </a>
+      <a href="predict.html" class="sidebar-item" data-path="predict">
+        <span class="si-icon">🔬</span> New Prediction
+      </a>
+      <a href="history.html" class="sidebar-item" data-path="history">
+        <span class="si-icon">📋</span> History
+      </a>
+      <div class="sidebar-sep"></div>
+      <a href="profile.html" class="sidebar-item" data-path="profile">
+        <span class="si-icon">👤</span> Profile
+      </a>
+      <a href="settings.html" class="sidebar-item" data-path="settings">
+        <span class="si-icon">⚙️</span> Settings
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">--</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading…</div>
+          <div class="user-role" id="sidebarUserRole">patient</div>
+        </div>
+      </div>
+      <button class="sidebar-item" id="signOutBtn" style="width:100%;text-align:left;margin-top:4px;">
+        <span class="si-icon">🚪</span> Sign Out
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      <span class="topbar-title">Dashboard</span>
+      <div class="topbar-actions">
+        <button class="theme-toggle" title="Toggle theme">
+          <span class="theme-icon">☀️</span>
+        </button>
+        <a href="predict.html" class="btn btn-primary btn-sm">+ New Analysis</a>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="page-header">
+        <h1 id="greetingTitle">Good morning 👋</h1>
+        <p>Here's a summary of your prediction activity.</p>
+      </div>
+
+      <!-- Stats grid -->
+      <div class="stats-grid" id="statsGrid">
+        <!-- Skeleton -->
+        <div class="stat-card">
+          <div class="stat-card-label">Total Predictions</div>
+          <div class="skeleton" style="height:32px;width:60%;margin-bottom:6px;"></div>
+          <div class="skeleton" style="height:14px;width:80%;"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Avg Confidence</div>
+          <div class="skeleton" style="height:32px;width:60%;margin-bottom:6px;"></div>
+          <div class="skeleton" style="height:14px;width:80%;"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Last Analysis</div>
+          <div class="skeleton" style="height:32px;width:60%;margin-bottom:6px;"></div>
+          <div class="skeleton" style="height:14px;width:80%;"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">High Risk</div>
+          <div class="skeleton" style="height:32px;width:60%;margin-bottom:6px;"></div>
+          <div class="skeleton" style="height:14px;width:80%;"></div>
+        </div>
+      </div>
+
+      <!-- Risk breakdown -->
+      <div class="risk-breakdown card" id="riskBreakdown">
+        <div class="risk-breakdown-title">Risk Distribution</div>
+        <div id="riskBars">
+          <div class="skeleton" style="height:16px;margin-bottom:10px;"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px;"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px;"></div>
+        </div>
+      </div>
+
+      <!-- Recent predictions -->
+      <div>
+        <div class="recent-title">
+          <span>Recent Predictions</span>
+          <a href="history.html" class="btn btn-ghost btn-sm">View all</a>
+        </div>
+        <div id="recentList" class="predictions-list">
+          <div class="skeleton" style="height:50px;border-radius:12px;margin-bottom:8px;"></div>
+          <div class="skeleton" style="height:50px;border-radius:12px;margin-bottom:8px;"></div>
+          <div class="skeleton" style="height:50px;border-radius:12px;"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const greetEl = document.getElementById('greetingTitle');
+
+  // Wait for shell.js to complete auth — it sets window._currentUser
+  // This avoids a second network round-trip and the file:// session bug.
+  const user = await window._shellReady;
+  if (!user) return;
+
+  const profile = await getCurrentProfile();
+  if (profile && greetEl) {
+    const firstName = (profile.full_name || profile.email).split(' ')[0];
+    greetEl.textContent = `${greeting}, ${escapeHtml(firstName)} 👋`;
+  }
+
+  // Load stats
+  const { data: stats, error } = await db.predictions.getStats(user.id);
+
+  // Render stats grid
+  const statsGrid = document.getElementById('statsGrid');
+  if (stats) {
+    const total = stats.total_predictions || 0;
+    const avgConf = stats.avg_confidence ? Math.round(stats.avg_confidence * 100) + '%' : '—';
+    const lastAt = stats.last_prediction_at ? timeAgo(stats.last_prediction_at) : 'Never';
+    const highRisk = (stats.high_risk_count || 0) + (stats.possible_count || 0);
+
+    statsGrid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-card-label">Total Predictions</div>
+        <div class="stat-card-value text-brand">${total}</div>
+        <div class="stat-card-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Avg Confidence</div>
+        <div class="stat-card-value">${avgConf}</div>
+        <div class="stat-card-sub">Across all predictions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Last Analysis</div>
+        <div class="stat-card-value" style="font-size:20px;">${escapeHtml(lastAt)}</div>
+        <div class="stat-card-sub">${stats.last_prediction_at ? formatDate(stats.last_prediction_at) : ''}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">High Risk Flags</div>
+        <div class="stat-card-value" style="color:${highRisk > 0 ? 'var(--risk-likely)' : 'var(--risk-normal)'}">${highRisk}</div>
+        <div class="stat-card-sub">Possible + High risk</div>
+      </div>
+    `;
+
+    // Risk bars
+    const total2 = total || 1;
+    const riskData = [
+      { label: 'Normal',     count: stats.normal_count || 0,     color: 'var(--risk-normal)',     cls: 'chip-normal' },
+      { label: 'Borderline', count: stats.borderline_count || 0, color: 'var(--risk-borderline)', cls: 'chip-borderline' },
+      { label: 'Possible',   count: stats.possible_count || 0,   color: 'var(--risk-possible)',   cls: 'chip-possible' },
+      { label: 'High Risk',  count: stats.high_risk_count || 0,  color: 'var(--risk-likely)',     cls: 'chip-likely' },
+    ];
+    document.getElementById('riskBars').innerHTML = riskData.map(r => `
+      <div class="risk-bar-row">
+        <span class="risk-bar-label">${r.label}</span>
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill" style="width:${Math.round((r.count/total2)*100)}%;background:${r.color};"></div>
+        </div>
+        <span class="risk-bar-count">${r.count}</span>
+      </div>
+    `).join('');
+  }
+
+  // Load recent predictions
+  const { data: recent } = await db.predictions.list(user.id, { limit: 5 });
+  const recentList = document.getElementById('recentList');
+
+  if (!recent || recent.length === 0) {
+    recentList.innerHTML = `
+      <div style="text-align:center;padding:32px;color:var(--text-2);">
+        <p style="font-size:32px;margin-bottom:8px;">🔬</p>
+        <p>No predictions yet. <a href="predict.html" class="text-brand">Run your first analysis!</a></p>
+      </div>
+    `;
+    return;
+  }
+
+  recentList.innerHTML = recent.map(row => `
+    <div class="prediction-row">
+      <div class="pr-diagnosis">${escapeHtml(row.diagnosis)}</div>
+      ${scoreChip(row.thalassemia_score)}
+      <span class="pr-method">${row.input_method}</span>
+      <span class="pr-date">${timeAgo(row.created_at)}</span>
+    </div>
+  `).join('');
+});
+</script>
+</body>
+</html>

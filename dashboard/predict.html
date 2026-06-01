@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Prediction — ThalassemiaAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <style>
+    /* ---- OCR extracted values preview ---- */
+    .ocr-preview {
+      background: var(--bg-3);
+      border: 1px solid var(--brand-glow);
+      border-radius: var(--r-lg);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      animation: fadeInUp 0.3s var(--ease) both;
+    }
+    .ocr-preview-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--brand);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ocr-fields {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .ocr-field { position: relative; }
+    .ocr-field label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      display: block;
+      margin-bottom: 5px;
+    }
+    .ocr-field input {
+      width: 100%;
+      background: var(--bg-2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 9px 12px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 700;
+      transition: border-color 0.2s;
+    }
+    .ocr-field input:focus { outline: none; border-color: var(--brand); }
+    .ocr-field input.ocr-detected { border-color: var(--brand-glow); background: rgba(0,229,204,0.04); }
+    .ocr-field input.ocr-missing { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.04); }
+    .ocr-field .ocr-badge {
+      position: absolute;
+      top: 0; right: 0;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 2px 6px;
+      border-radius: 0 var(--r-md) 0 var(--r-md);
+    }
+    .ocr-badge.detected { background: rgba(0,229,204,0.15); color: var(--brand); }
+    .ocr-badge.missing  { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .ocr-hint {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    /* Batch table */
+    .batch-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+    }
+    .batch-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .batch-table th {
+      background: var(--bg-3);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .batch-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .batch-table tr:last-child td { border-bottom: none; }
+    .batch-table tr:hover td { background: var(--bg-3); }
+    .batch-table td.td-mono { font-family: var(--font-mono); }
+    .batch-table td.td-err { color: #ef4444; }
+    /* Progress bar for batch */
+    .batch-progress-wrap {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .batch-progress-label {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .batch-progress-track {
+      height: 6px;
+      background: var(--bg-4);
+      border-radius: var(--r-full);
+      overflow: hidden;
+    }
+    .batch-progress-fill {
+      height: 100%;
+      background: var(--brand);
+      border-radius: var(--r-full);
+      transition: width 0.3s ease;
+    }
+    /* Image thumbnail */
+    .ocr-thumb-wrap {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .ocr-thumb {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .ocr-step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-2);
+      padding: 6px 12px;
+      background: var(--bg-3);
+      border-radius: var(--r-full);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .ocr-step-badge .spinner { width: 14px; height: 14px; border-width: 1.5px; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 640px) {
+      .ocr-fields { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="../index.html" class="sidebar-logo">
+      <span class="logo-dot"></span>
+      ThalassemiaAI
+    </a>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-item" data-path="dashboard/index">
+        <span class="si-icon">📊</span> Dashboard
+      </a>
+      <a href="predict.html" class="sidebar-item" data-path="predict">
+        <span class="si-icon">🔬</span> New Prediction
+      </a>
+      <a href="history.html" class="sidebar-item" data-path="history">
+        <span class="si-icon">📋</span> History
+      </a>
+      <div class="sidebar-sep"></div>
+      <a href="profile.html" class="sidebar-item" data-path="profile">
+        <span class="si-icon">👤</span> Profile
+      </a>
+      <a href="settings.html" class="sidebar-item" data-path="settings">
+        <span class="si-icon">⚙️</span> Settings
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">--</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading…</div>
+          <div class="user-role" id="sidebarUserRole">patient</div>
+        </div>
+      </div>
+      <button class="sidebar-item" id="signOutBtn" style="width:100%;text-align:left;margin-top:4px;">
+        <span class="si-icon">🚪</span> Sign Out
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      <span class="topbar-title">New Prediction</span>
+      <div class="topbar-actions">
+        <button class="theme-toggle" title="Toggle theme">
+          <span class="theme-icon">☀️</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="page-content page-content-md">
+      <div class="page-header">
+        <h1>Thalassemia Analysis</h1>
+        <p>Enter CBC values manually, upload a file, or scan a lab report image.</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="predict-tabs">
+        <button class="predict-tab active" data-tab="manual">⌨️ Manual</button>
+        <button class="predict-tab" data-tab="file">📁 File / Batch</button>
+        <button class="predict-tab" data-tab="image">🖼️ Image OCR</button>
+      </div>
+
+      <!-- Alert box -->
+      <div id="alertBox" style="margin-bottom:16px;"></div>
+
+      <!-- ============ MANUAL TAB ============ -->
+      <div id="tab-manual" class="tab-panel">
+        <div class="card">
+          <div class="predict-grid">
+            <div class="form-group">
+              <label class="form-label" for="hgb">HGB — Hemoglobin (g/dL)</label>
+              <input type="number" id="hgb" class="form-input" placeholder="e.g. 11.2" step="0.1" min="3" max="25" />
+              <span class="cbc-field-hint">Normal: 12–17 g/dL</span>
+              <span class="form-error" id="hgb-err"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mcv">MCV — Mean Corpuscular Volume (fL)</label>
+              <input type="number" id="mcv" class="form-input" placeholder="e.g. 65.0" step="0.1" min="40" max="130" />
+              <span class="cbc-field-hint">Normal: 80–100 fL</span>
+              <span class="form-error" id="mcv-err"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mch">MCH — Mean Corpuscular Hemoglobin (pg)</label>
+              <input type="number" id="mch" class="form-input" placeholder="e.g. 20.0" step="0.1" min="10" max="50" />
+              <span class="cbc-field-hint">Normal: 27–33 pg</span>
+              <span class="form-error" id="mch-err"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rbc">RBC — Red Blood Cell Count (×10¹²/L)</label>
+              <input type="number" id="rbc" class="form-input" placeholder="e.g. 5.8" step="0.1" min="1" max="8" />
+              <span class="cbc-field-hint">Normal: 4.0–5.5 ×10¹²/L</span>
+              <span class="form-error" id="rbc-err"></span>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="manualSubmitBtn" style="min-width:160px;">
+            🔬 Analyze
+          </button>
+        </div>
+      </div>
+
+      <!-- ============ FILE TAB ============ -->
+      <div id="tab-file" class="tab-panel hidden">
+        <div class="card">
+          <div class="upload-zone" id="fileZone">
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+            <div class="upload-icon">📁</div>
+            <div class="upload-title">Drag & drop your CSV or Excel file</div>
+            <div class="upload-sub">
+              Columns required: HGB, MCV, MCH, RBC<br/>
+              Optional: NAME — Max 10 MB, up to 500 rows<br/>
+              Processed entirely in your browser
+            </div>
+          </div>
+          <div id="fileInfo" class="hidden" style="margin-top:12px;"></div>
+          <button class="btn btn-primary" id="fileSubmitBtn" style="min-width:160px;margin-top:16px;" disabled>
+            🔬 Analyze File
+          </button>
+        </div>
+        <!-- Batch progress (shown during processing) -->
+        <div id="batchProgress" class="hidden" style="margin-top:20px;">
+          <div class="batch-progress-wrap">
+            <div class="batch-progress-label">
+              <span id="batchProgressText">Processing…</span>
+              <span id="batchProgressPct">0%</span>
+            </div>
+            <div class="batch-progress-track">
+              <div class="batch-progress-fill" id="batchProgressFill" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Batch results table -->
+        <div id="batchResults" class="hidden" style="margin-top:20px;"></div>
+      </div>
+
+      <!-- ============ IMAGE TAB ============ -->
+      <div id="tab-image" class="tab-panel hidden">
+        <div class="card">
+          <div class="upload-zone" id="imageZone">
+            <input type="file" id="imageInput" accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff" />
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-title">Upload a lab report image</div>
+            <div class="upload-sub">
+              PNG, JPG, JPEG, WEBP, BMP — Max 10 MB<br/>
+              AI vision will extract HGB, MCV, MCH, RBC values
+            </div>
+          </div>
+          <div id="imageInfo" class="hidden" style="margin-top:12px;"></div>
+          <!-- OCR status indicator -->
+          <div id="ocrStatus" class="hidden" style="margin-top:14px;"></div>
+          <!-- Extracted values editor (shown after OCR) -->
+          <div id="ocrPreview" class="hidden"></div>
+          <button class="btn btn-primary" id="imageSubmitBtn" style="min-width:160px;margin-top:16px;" disabled>
+            🔬 Extract & Analyze
+          </button>
+        </div>
+      </div>
+
+      <!-- ============ RESULT ============ -->
+      <div id="resultPanel" class="hidden"></div>
+
+    </main>
+  </div>
+
+</div>
+
+<!-- Scripts: SheetJS for CSV/Excel parsing in browser -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+/* ============================================================
+   Predict page — full OCR + batch pipeline
+   Architecture:
+     Image  → Groq Vision API (browser) → extract CBC → /predict/manual
+     File   → SheetJS (browser parse)   → rows loop  → /predict/manual × N
+     Manual → /predict/manual directly
+   All predictions saved to Supabase after success.
+   ============================================================ */
+
+// ---- Groq config (vision OCR) ----
+const GROQ_API_URL  = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_API_KEY  = CONFIG.GROQ_API_KEY;
+const GROQ_MODEL    = CONFIG.GROQ_MODEL;
+
+// CBC valid ranges (mirrors the Python API)
+const CBC_RANGES = { hgb: [3, 25], mcv: [40, 130], mch: [10, 50], rbc: [1, 8] };
+
+let currentUserId   = null;
+// Holds values extracted by OCR so the "Analyze" button can use them
+let _ocrExtracted   = null;
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await window._shellReady;
+  if (user) currentUserId = user.id;
+
+  // ---- Tab switching ----
+  document.querySelectorAll('.predict-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.predict-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+      clearAlert('alertBox');
+      document.getElementById('resultPanel').classList.add('hidden');
+      // Reset OCR state when switching away
+      _ocrExtracted = null;
+    });
+  });
+
+  // ---- Manual ----
+  document.getElementById('manualSubmitBtn').addEventListener('click', handleManual);
+
+  // ---- File / Batch ----
+  setupUploadZone('fileZone', 'fileInput', 'fileInfo', 'fileSubmitBtn',
+    ['.csv', '.xlsx', '.xls']);
+  document.getElementById('fileSubmitBtn').addEventListener('click', handleFile);
+
+  // ---- Image OCR ----
+  setupUploadZone('imageZone', 'imageInput', 'imageInfo', 'imageSubmitBtn',
+    ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp', '.tiff'],
+    onImageSelected);
+  document.getElementById('imageSubmitBtn').addEventListener('click', handleImageAnalyze);
+});
+
+/* ============================================================
+   UPLOAD ZONE SETUP
+   ============================================================ */
+function setupUploadZone(zoneId, inputId, infoId, btnId, allowedExts, onSelect) {
+  const zone  = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  const info  = document.getElementById(infoId);
+  const btn   = document.getElementById(btnId);
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file) processFileSelect(file, allowedExts, info, btn, input, onSelect);
+  });
+  input.addEventListener('change', () => {
+    if (input.files[0])
+      processFileSelect(input.files[0], allowedExts, info, btn, input, onSelect);
+  });
+}
+
+function processFileSelect(file, allowedExts, infoEl, btnEl, inputEl, onSelect) {
+  const ext = '.' + (file.name.split('.').pop() || '').toLowerCase();
+  if (!allowedExts.includes(ext)) {
+    showAlert('alertBox', 'error', `File type "${ext}" is not supported. Allowed: ${allowedExts.join(', ')}`);
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showAlert('alertBox', 'error', 'File is too large. Maximum size is 10 MB.');
+    return;
+  }
+  clearAlert('alertBox');
+  infoEl.classList.remove('hidden');
+  infoEl.innerHTML = `
+    <div class="upload-file-info">
+      <span>📄</span>
+      <span class="upload-file-name">${escapeHtml(file.name)}</span>
+      <span class="text-muted text-sm">${(file.size / 1024).toFixed(1)} KB</span>
+      <span class="upload-file-clear"
+        onclick="clearFileUpload('${infoEl.id}','${btnEl.id}','${inputEl.id}')">✕</span>
+    </div>`;
+  inputEl._selectedFile = file;
+  btnEl.disabled = false;
+  if (onSelect) onSelect(file);
+}
+
+function clearFileUpload(infoId, btnId, inputId) {
+  document.getElementById(infoId).classList.add('hidden');
+  document.getElementById(infoId).innerHTML = '';
+  document.getElementById(btnId).disabled = true;
+  const input = document.getElementById(inputId);
+  input.value = '';
+  input._selectedFile = null;
+  // Reset OCR state
+  _ocrExtracted = null;
+  const preview = document.getElementById('ocrPreview');
+  const status  = document.getElementById('ocrStatus');
+  if (preview) { preview.classList.add('hidden'); preview.innerHTML = ''; }
+  if (status)  { status.classList.add('hidden');  status.innerHTML = ''; }
+}
+
+/* ============================================================
+   IMAGE TAB — Groq Vision OCR → pre-fill form → analyze
+   ============================================================ */
+
+/**
+ * Called immediately when the user selects an image.
+ * Runs Groq vision OCR in the background, shows live status,
+ * then renders the editable extracted-values preview.
+ */
+async function onImageSelected(file) {
+  _ocrExtracted = null;
+  document.getElementById('imageSubmitBtn').disabled = true;
+  document.getElementById('resultPanel').classList.add('hidden');
+
+  const statusEl  = document.getElementById('ocrStatus');
+  const previewEl = document.getElementById('ocrPreview');
+  previewEl.classList.add('hidden');
+  previewEl.innerHTML = '';
+
+  // Show thumbnail + progress
+  const thumbUrl = URL.createObjectURL(file);
+  statusEl.classList.remove('hidden');
+  statusEl.innerHTML = `
+    <div class="ocr-thumb-wrap">
+      <img src="${thumbUrl}" class="ocr-thumb" alt="Lab report preview" />
+      <div>
+        <div class="ocr-step-badge">
+          <span class="spinner"></span>
+          Reading image with AI vision…
+        </div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:6px;">
+          Extracting HGB, MCV, MCH, RBC from your lab report
+        </div>
+      </div>
+    </div>`;
+
+  try {
+    const extracted = await runGroqOCR(file);
+    _ocrExtracted = extracted;
+
+    const missing  = Object.entries(extracted).filter(([,v]) => v === null).map(([k]) => k);
+    const detected = Object.entries(extracted).filter(([,v]) => v !== null);
+
+    statusEl.innerHTML = '';
+    statusEl.classList.add('hidden');
+
+    // Build the editable preview panel
+    renderOcrPreview(extracted, thumbUrl, missing);
+
+  } catch (err) {
+    statusEl.innerHTML = `
+      <div class="alert alert-error" style="margin:0;">
+        <span class="alert-icon">⚠️</span>
+        <span>OCR failed: ${escapeHtml(err.message)}. Please enter values manually.</span>
+      </div>`;
+    // Still enable the analyze button so user can proceed manually
+    document.getElementById('imageSubmitBtn').disabled = false;
+  }
+}
+
+/**
+ * Renders the editable OCR results grid.
+ * Detected fields are pre-filled (green border).
+ * Missing fields are empty (red border) with placeholder.
+ */
+function renderOcrPreview(extracted, thumbUrl, missing) {
+  const previewEl = document.getElementById('ocrPreview');
+  const fields = [
+    { key: 'hgb', label: 'HGB — Hemoglobin',    unit: 'g/dL',     hint: '3–25' },
+    { key: 'mcv', label: 'MCV — Mean Corp. Vol.', unit: 'fL',       hint: '40–130' },
+    { key: 'mch', label: 'MCH — Mean Corp. Hgb',  unit: 'pg',       hint: '10–50' },
+    { key: 'rbc', label: 'RBC — Red Blood Cells',  unit: '×10¹²/L', hint: '1–8' },
+  ];
+
+  const allDetected = missing.length === 0;
+  const hintText = allDetected
+    ? 'All 4 values extracted successfully. Review and correct if needed, then click Analyze.'
+    : `Could not extract: <strong>${missing.join(', ')}</strong>. Fill in the highlighted fields, then click Analyze.`;
+
+  previewEl.innerHTML = `
+    <div class="ocr-preview">
+      <div class="ocr-preview-title">
+        🤖 AI-Extracted CBC Values
+        ${allDetected
+          ? '<span style="background:rgba(0,229,204,0.15);color:var(--brand);font-size:10px;padding:2px 8px;border-radius:var(--r-full);">All fields detected</span>'
+          : `<span style="background:rgba(239,68,68,0.12);color:#ef4444;font-size:10px;padding:2px 8px;border-radius:var(--r-full);">${missing.length} field${missing.length>1?'s':''} missing</span>`}
+      </div>
+      <div class="ocr-hint">${hintText}</div>
+      <div class="ocr-fields">
+        ${fields.map(f => {
+          const val   = extracted[f.key];
+          const isDet = val !== null;
+          return `
+            <div class="ocr-field">
+              <label for="ocr-${f.key}">${f.key.toUpperCase()} <span style="color:var(--text-3);font-weight:400;">${f.unit}</span></label>
+              <div class="ocr-badge ${isDet ? 'detected' : 'missing'}">${isDet ? '✓ extracted' : '⚠ missing'}</div>
+              <input
+                type="number"
+                id="ocr-${f.key}"
+                class="ocr-field-input ${isDet ? 'ocr-detected' : 'ocr-missing'}"
+                value="${isDet ? val : ''}"
+                placeholder="${f.hint}"
+                step="0.1"
+                min="${CBC_RANGES[f.key][0]}"
+                max="${CBC_RANGES[f.key][1]}"
+              />
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  previewEl.classList.remove('hidden');
+  document.getElementById('imageSubmitBtn').disabled = false;
+  document.getElementById('imageSubmitBtn').textContent = '🔬 Analyze Extracted Values';
+}
+
+/**
+ * Calls Groq Vision API to extract CBC values from the image.
+ * Returns { hgb, mcv, mch, rbc } — null for any value not found.
+ */
+async function runGroqOCR(file) {
+  // Convert file to base64
+  const base64 = await fileToBase64(file);
+  const mimeType = file.type || 'image/jpeg';
+
+  const prompt = `You are a medical lab report parser. 
+Examine this lab report image carefully and extract ONLY these four CBC values:
+- HGB (Hemoglobin) in g/dL — valid range 3–25
+- MCV (Mean Corpuscular Volume) in fL — valid range 40–130  
+- MCH (Mean Corpuscular Hemoglobin) in pg — valid range 10–50
+- RBC (Red Blood Cell count) in ×10¹²/L or million/μL — valid range 1–8
+
+Rules:
+1. Look for these exact labels or common abbreviations (Hgb, Hb, MCV, MCH, RBC, Erythrocytes, Red cells)
+2. Extract only the numeric result value, not reference ranges
+3. If RBC appears as a large number like 4500000, divide by 1000000 to get 4.5
+4. If a value is genuinely not present or unreadable, use null
+5. Return ONLY valid JSON, nothing else — no explanation, no markdown
+
+JSON format:
+{"hgb": <number or null>, "mcv": <number or null>, "mch": <number or null>, "rbc": <number or null>}`;
+
+  const resp = await fetch(GROQ_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 200,
+      temperature: 0,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
+        ],
+      }],
+    }),
+  });
+
+  if (!resp.ok) {
+    const errBody = await resp.json().catch(() => ({}));
+    throw new Error(errBody?.error?.message || `Groq API error ${resp.status}`);
+  }
+
+  const data = await resp.json();
+  const text = data.choices?.[0]?.message?.content?.trim() || '';
+
+  // Parse the JSON — strip any accidental markdown fences
+  const clean = text.replace(/```json|```/g, '').trim();
+  let parsed;
+  try {
+    parsed = JSON.parse(clean);
+  } catch {
+    throw new Error(`Could not parse AI response. Raw: "${text.slice(0, 80)}"`);
+  }
+
+  // Validate and clamp each field
+  const result = {};
+  for (const key of ['hgb', 'mcv', 'mch', 'rbc']) {
+    const val = parsed[key];
+    if (val === null || val === undefined) {
+      result[key] = null;
+      continue;
+    }
+    const num = parseFloat(val);
+    const [min, max] = CBC_RANGES[key];
+    if (isNaN(num) || num < min || num > max) {
+      result[key] = null; // out of range → discard
+    } else {
+      result[key] = Math.round(num * 10) / 10; // 1 decimal
+    }
+  }
+
+  return result;
+}
+
+/**
+ * "Extract & Analyze" button handler.
+ * Reads values from the OCR preview inputs (user may have corrected them),
+ * validates, then calls the prediction API.
+ */
+async function handleImageAnalyze() {
+  clearAlert('alertBox');
+  document.getElementById('resultPanel').classList.add('hidden');
+
+  // Read from OCR preview inputs if they exist, otherwise fall back to OCR extracted
+  const vals = {};
+  const errs = [];
+  for (const key of ['hgb', 'mcv', 'mch', 'rbc']) {
+    const input = document.getElementById(`ocr-${key}`);
+    if (!input) {
+      errs.push(`${key.toUpperCase()} field not found`);
+      continue;
+    }
+    const v = parseFloat(input.value);
+    const [min, max] = CBC_RANGES[key];
+    if (!input.value || isNaN(v)) {
+      input.classList.add('ocr-missing');
+      errs.push(`${key.toUpperCase()} is required`);
+    } else if (v < min || v > max) {
+      input.classList.add('ocr-missing');
+      errs.push(`${key.toUpperCase()} must be ${min}–${max}`);
+    } else {
+      input.classList.remove('ocr-missing');
+      vals[key] = v;
+    }
+  }
+
+  if (errs.length > 0) {
+    showAlert('alertBox', 'error', 'Please fix: ' + errs.join(', '));
+    return;
+  }
+
+  setLoading('imageSubmitBtn', true, 'Analyzing…');
+
+  try {
+    const result = await callPredictManual(vals);
+    await savePrediction({ ...vals, input_method: 'image' }, result);
+    renderResult(result, vals);
+  } catch (e) {
+    showAlert('alertBox', 'error', apiErrorMessage(e));
+  } finally {
+    setLoading('imageSubmitBtn', false);
+  }
+}
+
+/* ============================================================
+   FILE / BATCH TAB — SheetJS browser parse → predict loop
+   ============================================================ */
+
+async function handleFile() {
+  clearAlert('alertBox');
+  document.getElementById('batchResults').classList.add('hidden');
+  document.getElementById('resultPanel').classList.add('hidden');
+
+  const input = document.getElementById('fileInput');
+  const file  = input._selectedFile || input.files[0];
+  if (!file) return;
+
+  setLoading('fileSubmitBtn', true, 'Parsing file…');
+
+  let rows;
+  try {
+    rows = await parseSpreadsheet(file);
+  } catch (e) {
+    showAlert('alertBox', 'error', `Could not parse file: ${e.message}`);
+    setLoading('fileSubmitBtn', false);
+    return;
+  }
+
+  if (!rows || rows.length === 0) {
+    showAlert('alertBox', 'error', 'No data rows found in file. Check that the file is not empty.');
+    setLoading('fileSubmitBtn', false);
+    return;
+  }
+
+  if (rows.length > 500) {
+    showAlert('alertBox', 'warn', `File has ${rows.length} rows. Processing first 500 only.`);
+    rows = rows.slice(0, 500);
+  }
+
+  // Show progress UI
+  const progressWrap = document.getElementById('batchProgress');
+  progressWrap.classList.remove('hidden');
+  updateProgress(0, rows.length);
+
+  const results = [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    updateProgress(i + 1, rows.length);
+
+    const rowName = row.NAME || row.name || `Patient ${i + 1}`;
+    const vals = {
+      hgb: parseFloat(row.HGB ?? row.hgb ?? row.Hgb),
+      mcv: parseFloat(row.MCV ?? row.mcv ?? row.Mcv),
+      mch: parseFloat(row.MCH ?? row.mch ?? row.Mch),
+      rbc: parseFloat(row.RBC ?? row.rbc ?? row.Rbc),
+    };
+
+    // Validate row
+    const rowErrors = [];
+    for (const [key, val] of Object.entries(vals)) {
+      if (isNaN(val)) { rowErrors.push(`${key.toUpperCase()} missing`); continue; }
+      const [min, max] = CBC_RANGES[key];
+      if (val < min || val > max) rowErrors.push(`${key.toUpperCase()}=${val} out of range`);
+    }
+
+    if (rowErrors.length > 0) {
+      results.push({ patient: rowName, error: rowErrors.join(', '), vals: null, result: null });
+      continue;
+    }
+
+    try {
+      const result = await callPredictManual(vals);
+      // Save each row to Supabase
+      await savePrediction({ ...vals, input_method: 'file' }, result);
+      results.push({ patient: rowName, error: null, vals, result });
+    } catch (e) {
+      results.push({ patient: rowName, error: apiErrorMessage(e), vals, result: null });
+    }
+  }
+
+  setLoading('fileSubmitBtn', false);
+  progressWrap.classList.add('hidden');
+  renderBatchResults(results);
+}
+
+/**
+ * Parse CSV or Excel file using SheetJS (runs entirely in browser).
+ * Returns array of row objects with uppercase keys.
+ */
+function parseSpreadsheet(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb   = XLSX.read(data, { type: 'array' });
+        const ws   = wb.Sheets[wb.SheetNames[0]];
+        // header: 1 = first row is headers; defval: '' = empty cells become empty string
+        const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+        if (json.length < 2) {
+          return reject(new Error('File must have at least a header row and one data row.'));
+        }
+
+        // Normalize headers
+        const headers = json[0].map(h => String(h).trim().toUpperCase());
+        const requiredCols = ['HGB', 'MCV', 'MCH', 'RBC'];
+        const missing = requiredCols.filter(c => !headers.includes(c));
+        if (missing.length > 0) {
+          return reject(new Error(`Missing required columns: ${missing.join(', ')}. Found: ${headers.join(', ')}`));
+        }
+
+        // Build row objects
+        const rows = json.slice(1)
+          .filter(row => row.some(cell => cell !== '')) // skip empty rows
+          .map(row => {
+            const obj = {};
+            headers.forEach((h, i) => { obj[h] = row[i]; });
+            return obj;
+          });
+
+        resolve(rows);
+      } catch (err) {
+        reject(new Error('Could not read file: ' + err.message));
+      }
+    };
+    reader.onerror = () => reject(new Error('File read failed.'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function updateProgress(done, total) {
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('batchProgressFill').style.width = pct + '%';
+  document.getElementById('batchProgressPct').textContent = pct + '%';
+  document.getElementById('batchProgressText').textContent =
+    done < total ? `Processing patient ${done} of ${total}…` : `Saving results…`;
+}
+
+/* ============================================================
+   MANUAL TAB
+   ============================================================ */
+
+async function handleManual() {
+  clearAlert('alertBox');
+  document.getElementById('resultPanel').classList.add('hidden');
+
+  const fields = ['hgb', 'mcv', 'mch', 'rbc'];
+  let valid = true;
+  const vals = {};
+
+  for (const f of fields) {
+    const input = document.getElementById(f);
+    const err   = document.getElementById(`${f}-err`);
+    const v     = parseFloat(input.value);
+    err.textContent = '';
+    input.classList.remove('error');
+
+    if (!input.value || isNaN(v)) {
+      err.textContent = 'Required';
+      input.classList.add('error');
+      valid = false;
+      continue;
+    }
+    const [min, max] = CBC_RANGES[f];
+    if (v < min || v > max) {
+      err.textContent = `Must be ${min}–${max}`;
+      input.classList.add('error');
+      valid = false;
+      continue;
+    }
+    vals[f] = v;
+  }
+  if (!valid) return;
+
+  setLoading('manualSubmitBtn', true, 'Analyzing…');
+  try {
+    const result = await callPredictManual(vals);
+    await savePrediction({ ...vals, input_method: 'manual' }, result);
+    renderResult(result, vals);
+  } catch (e) {
+    showAlert('alertBox', 'error', apiErrorMessage(e));
+  } finally {
+    setLoading('manualSubmitBtn', false);
+  }
+}
+
+/* ============================================================
+   SHARED API + SUPABASE HELPERS
+   ============================================================ */
+
+/** POST to /predict/manual, returns result object */
+async function callPredictManual(vals) {
+  const resp = await fetch(`${CONFIG.API_URL}/predict/manual`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(vals),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw { status: resp.status, detail: err.detail || `API error ${resp.status}` };
+  }
+  return resp.json();
+}
+
+/** Save a prediction row to Supabase */
+async function savePrediction(inputData, result) {
+  if (!currentUserId) return;
+  try {
+    await db.predictions.insert({
+      user_id:          currentUserId,
+      hgb:              inputData.hgb,
+      mcv:              inputData.mcv,
+      mch:              inputData.mch,
+      rbc:              inputData.rbc,
+      mentzer_index:    result.indicators?.mentzer_index,
+      shine_lal:        result.indicators?.shine_lal,
+      diagnosis:        result.prediction,
+      confidence:       result.confidence,
+      thalassemia_score: result.thalassemia_score,
+      recommendation:   result.recommendation,
+      explanation:      result.explanation,
+      input_method:     inputData.input_method || 'manual',
+    });
+  } catch (e) {
+    console.warn('Supabase save failed:', e);
+  }
+}
+
+/** Convert File to base64 string (no data: prefix) */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('Could not read file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ============================================================
+   RENDER HELPERS
+   ============================================================ */
+
+function renderResult(result, inputVals) {
+  const score = result.thalassemia_score;
+  const color = getRiskColor(score);
+  const cat   = getRiskCategory(score);
+
+  const panel = document.getElementById('resultPanel');
+  panel.className = 'result-panel';
+
+  const cbcRow = inputVals ? `
+    <div class="result-indicators" style="margin-bottom:12px;">
+      <div class="indicator"><div class="indicator-label">HGB</div><div class="indicator-value">${roundNum(inputVals.hgb)} <span style="font-size:11px;color:var(--text-3);">g/dL</span></div></div>
+      <div class="indicator"><div class="indicator-label">MCV</div><div class="indicator-value">${roundNum(inputVals.mcv)} <span style="font-size:11px;color:var(--text-3);">fL</span></div></div>
+      <div class="indicator"><div class="indicator-label">MCH</div><div class="indicator-value">${roundNum(inputVals.mch)} <span style="font-size:11px;color:var(--text-3);">pg</span></div></div>
+      <div class="indicator"><div class="indicator-label">RBC</div><div class="indicator-value">${roundNum(inputVals.rbc)}</div></div>
+    </div>` : '';
+
+  panel.innerHTML = `
+    <div class="result-header">
+      <div>
+        <div class="result-diagnosis">${escapeHtml(result.prediction)}</div>
+        <div style="margin-top:6px;">${scoreChip(score, cat)}</div>
+      </div>
+    </div>
+    <div class="result-body">
+      <div class="result-meta">
+        <div class="result-meta-item">
+          <div class="result-meta-label">Risk Score</div>
+          <div class="result-meta-value" style="color:${color}">${score}/10</div>
+        </div>
+        <div class="result-meta-item">
+          <div class="result-meta-label">Confidence</div>
+          <div class="result-meta-value">${percent(result.confidence)}</div>
+        </div>
+        <div class="result-meta-item">
+          <div class="result-meta-label">Category</div>
+          <div class="result-meta-value" style="font-size:15px;">${cat}</div>
+        </div>
+      </div>
+      ${cbcRow}
+      <div class="result-indicators">
+        <div class="indicator">
+          <div class="indicator-label">Mentzer Index</div>
+          <div class="indicator-value">${roundNum(result.indicators?.mentzer_index)}</div>
+        </div>
+        <div class="indicator">
+          <div class="indicator-label">Shine-Lal Index</div>
+          <div class="indicator-value">${roundNum(result.indicators?.shine_lal)}</div>
+        </div>
+      </div>
+      <div class="result-rec">💊 ${escapeHtml(result.recommendation)}</div>
+      <div class="result-explain">${escapeHtml(result.explanation)}</div>
+    </div>`;
+
+  panel.classList.remove('hidden');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderBatchResults(results) {
+  const el  = document.getElementById('batchResults');
+  const ok  = results.filter(r => r.result);
+  const err = results.filter(r => r.error);
+
+  const summary = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+      <span style="font-size:13px;color:var(--text-2);">
+        ${results.length} rows processed —
+        <span style="color:var(--brand);">✓ ${ok.length} succeeded</span>
+        ${err.length > 0 ? ` · <span style="color:#ef4444;">✗ ${err.length} failed</span>` : ''}
+      </span>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="recent-title" style="margin-bottom:14px;">Batch Results</div>
+      ${summary}
+      <div class="batch-table-wrap">
+        <table class="batch-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>HGB</th><th>MCV</th><th>MCH</th><th>RBC</th>
+              <th>Diagnosis</th>
+              <th>Score</th>
+              <th>Confidence</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${results.map(r => {
+              if (r.error) {
+                return `<tr>
+                  <td>${escapeHtml(r.patient)}</td>
+                  <td colspan="7" class="td-err">Error: ${escapeHtml(r.error)}</td>
+                  <td class="td-err">✗</td>
+                </tr>`;
+              }
+              const { vals: v, result: res } = r;
+              return `<tr>
+                <td><strong>${escapeHtml(r.patient)}</strong></td>
+                <td class="td-mono">${roundNum(v.hgb)}</td>
+                <td class="td-mono">${roundNum(v.mcv)}</td>
+                <td class="td-mono">${roundNum(v.mch)}</td>
+                <td class="td-mono">${roundNum(v.rbc)}</td>
+                <td>${escapeHtml(res.prediction)}</td>
+                <td>${scoreChip(res.thalassemia_score)}</td>
+                <td class="td-mono">${percent(res.confidence)}</td>
+                <td style="color:var(--brand);">✓</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+
+  el.classList.remove('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>

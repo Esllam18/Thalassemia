@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — ThalassemiaAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-theme="dark">
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="../index.html" class="sidebar-logo">
+      <span class="logo-dot"></span>
+      ThalassemiaAI
+    </a>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-item" data-path="dashboard/index">
+        <span class="si-icon">📊</span> Dashboard
+      </a>
+      <a href="predict.html" class="sidebar-item" data-path="predict">
+        <span class="si-icon">🔬</span> New Prediction
+      </a>
+      <a href="history.html" class="sidebar-item" data-path="history">
+        <span class="si-icon">📋</span> History
+      </a>
+      <div class="sidebar-sep"></div>
+      <a href="profile.html" class="sidebar-item" data-path="profile">
+        <span class="si-icon">👤</span> Profile
+      </a>
+      <a href="settings.html" class="sidebar-item" data-path="settings">
+        <span class="si-icon">⚙️</span> Settings
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">--</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading…</div>
+          <div class="user-role" id="sidebarUserRole">patient</div>
+        </div>
+      </div>
+      <button class="sidebar-item" id="signOutBtn" style="width:100%;text-align:left;margin-top:4px;">
+        <span class="si-icon">🚪</span> Sign Out
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      <span class="topbar-title">Settings</span>
+      <div class="topbar-actions">
+        <button class="theme-toggle"><span class="theme-icon">☀️</span></button>
+      </div>
+    </header>
+
+    <main class="page-content page-content-sm">
+      <div class="page-header">
+        <h1>Account Settings</h1>
+        <p>Manage your password, email, and preferences.</p>
+      </div>
+
+      <!-- Change Password -->
+      <div class="settings-card" style="margin-bottom:16px;">
+        <div class="settings-section-title">Change Password</div>
+        <div class="settings-form">
+          <div id="pwAlertBox"></div>
+          <div class="form-group">
+            <label class="form-label" for="newPassword">New Password</label>
+            <div class="input-wrap">
+              <input type="password" id="newPassword" class="form-input" placeholder="Min. 6 characters" />
+              <button type="button" class="show-pass-btn" id="togglePw1">
+                <span id="eye1">👁</span>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword">Confirm New Password</label>
+            <div class="input-wrap">
+              <input type="password" id="confirmPassword" class="form-input" placeholder="Repeat password" />
+              <button type="button" class="show-pass-btn" id="togglePw2">
+                <span id="eye2">👁</span>
+              </button>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="savePwBtn" style="width:fit-content;">
+            Update Password
+          </button>
+        </div>
+      </div>
+
+      <!-- Theme -->
+      <div class="settings-card" style="margin-bottom:16px;">
+        <div class="settings-section-title">Appearance</div>
+        <div class="settings-form">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
+            <div>
+              <div style="font-size:14px;font-weight:600;">Theme</div>
+              <div style="font-size:13px;color:var(--text-2);">Switch between dark and light mode</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="themeToggleBtn">
+              <span id="themeToggleLabel">Switch to Light</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="settings-card" style="border-color:rgba(239,68,68,0.2);">
+        <div class="settings-section-title" style="color:#ef4444;">Danger Zone</div>
+        <div class="settings-form">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:14px;font-weight:600;">Sign Out</div>
+              <div style="font-size:13px;color:var(--text-2);">Sign out of your account on this device</div>
+            </div>
+            <button class="btn btn-danger btn-sm" id="signOutBtn2">Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Toggle password visibility
+  document.getElementById('togglePw1').addEventListener('click', () => {
+    const inp = document.getElementById('newPassword');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    document.getElementById('eye1').textContent = inp.type === 'password' ? '👁' : '🙈';
+  });
+  document.getElementById('togglePw2').addEventListener('click', () => {
+    const inp = document.getElementById('confirmPassword');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    document.getElementById('eye2').textContent = inp.type === 'password' ? '👁' : '🙈';
+  });
+
+  // Save password
+  document.getElementById('savePwBtn').addEventListener('click', async () => {
+    clearAlert('pwAlertBox');
+    const pw1 = document.getElementById('newPassword').value;
+    const pw2 = document.getElementById('confirmPassword').value;
+
+    if (!pw1 || !pw2) {
+      showAlert('pwAlertBox', 'error', 'Please fill in both fields.');
+      return;
+    }
+    if (pw1.length < 6) {
+      showAlert('pwAlertBox', 'error', 'Password must be at least 6 characters.');
+      return;
+    }
+    if (pw1 !== pw2) {
+      showAlert('pwAlertBox', 'error', 'Passwords do not match.');
+      return;
+    }
+
+    setLoading('savePwBtn', true, 'Updating…');
+    const { error } = await db.auth.updatePassword(pw1);
+    setLoading('savePwBtn', false);
+
+    if (error) {
+      showAlert('pwAlertBox', 'error', error.message);
+    } else {
+      showAlert('pwAlertBox', 'success', 'Password updated successfully!');
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+    }
+  });
+
+  // Theme toggle button
+  const themeBtn = document.getElementById('themeToggleBtn');
+  const themeLabel = document.getElementById('themeToggleLabel');
+
+  function updateThemeBtn() {
+    const t = getTheme();
+    themeLabel.textContent = t === 'dark' ? '☀️ Switch to Light' : '🌙 Switch to Dark';
+  }
+  updateThemeBtn();
+
+  themeBtn.addEventListener('click', () => {
+    toggleTheme();
+    updateThemeBtn();
+  });
+
+  // Second sign out button
+  document.getElementById('signOutBtn2').addEventListener('click', () => signOut());
+});
+</script>
+</body>
+</html>

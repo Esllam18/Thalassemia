@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile — ThalassemiaAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-theme="dark">
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="../index.html" class="sidebar-logo">
+      <span class="logo-dot"></span>
+      ThalassemiaAI
+    </a>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-item" data-path="dashboard/index">
+        <span class="si-icon">📊</span> Dashboard
+      </a>
+      <a href="predict.html" class="sidebar-item" data-path="predict">
+        <span class="si-icon">🔬</span> New Prediction
+      </a>
+      <a href="history.html" class="sidebar-item" data-path="history">
+        <span class="si-icon">📋</span> History
+      </a>
+      <div class="sidebar-sep"></div>
+      <a href="profile.html" class="sidebar-item" data-path="profile">
+        <span class="si-icon">👤</span> Profile
+      </a>
+      <a href="settings.html" class="sidebar-item" data-path="settings">
+        <span class="si-icon">⚙️</span> Settings
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">--</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading…</div>
+          <div class="user-role" id="sidebarUserRole">patient</div>
+        </div>
+      </div>
+      <button class="sidebar-item" id="signOutBtn" style="width:100%;text-align:left;margin-top:4px;">
+        <span class="si-icon">🚪</span> Sign Out
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      <span class="topbar-title">Profile</span>
+      <div class="topbar-actions">
+        <button class="theme-toggle"><span class="theme-icon">☀️</span></button>
+      </div>
+    </header>
+
+    <main class="page-content page-content-sm">
+      <div class="page-header">
+        <h1>Your Profile</h1>
+        <p>Manage your name and account information.</p>
+      </div>
+
+      <div id="alertBox" style="margin-bottom:16px;"></div>
+
+      <div class="profile-grid">
+
+        <!-- Avatar Card -->
+        <div class="profile-avatar-card">
+          <div class="profile-avatar-big" id="profileAvatarBig">--</div>
+          <div class="profile-name" id="profileName">Loading…</div>
+          <div class="profile-email" id="profileEmail"></div>
+          <div style="margin-top:6px;">
+            <span class="chip chip-brand" id="profileRole">patient</span>
+          </div>
+          <div style="margin-top:16px;font-size:12px;color:var(--text-3);" id="profileCreated"></div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="settings-card">
+          <div class="settings-section-title">Edit Profile</div>
+          <div class="settings-form">
+            <div class="form-group">
+              <label class="form-label" for="editName">Full Name</label>
+              <input type="text" id="editName" class="form-input" placeholder="Your full name" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" id="editEmail" disabled style="opacity:0.6;cursor:not-allowed;" />
+              <span class="form-hint">Email cannot be changed here. Use Settings to update email.</span>
+            </div>
+            <button class="btn btn-primary" id="saveProfileBtn" style="width:fit-content;">
+              Save Changes
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Stats summary -->
+      <div class="card" style="margin-top:20px;">
+        <div class="settings-section-title" style="padding:0 0 12px;">Activity Summary</div>
+        <div class="stats-grid" id="profileStats" style="margin-bottom:0;">
+          <div class="skeleton" style="height:70px;border-radius:12px;"></div>
+          <div class="skeleton" style="height:70px;border-radius:12px;"></div>
+          <div class="skeleton" style="height:70px;border-radius:12px;"></div>
+          <div class="skeleton" style="height:70px;border-radius:12px;"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await window._shellReady;
+  if (!user) return;
+  const userId = user.id;
+
+  // Load profile
+  const { data: profile } = await db.profiles.get(userId);
+  if (profile) populateProfile(profile);
+
+  // Load stats
+  const { data: stats } = await db.predictions.getStats(userId);
+  if (stats) renderStats(stats);
+
+  // Save button
+  document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+    const name = document.getElementById('editName').value.trim();
+    if (!name) { showAlert('alertBox', 'error', 'Name cannot be empty.'); return; }
+
+    setLoading('saveProfileBtn', true, 'Saving…');
+    const { error } = await db.profiles.update(userId, { full_name: name });
+    setLoading('saveProfileBtn', false);
+
+    if (error) {
+      showAlert('alertBox', 'error', error.message);
+    } else {
+      clearProfileCache();
+      showAlert('alertBox', 'success', 'Profile updated successfully!');
+      await populateSidebarUser();
+      populateProfile({ ...profile, full_name: name });
+    }
+  });
+});
+
+function populateProfile(profile) {
+  const initials = (profile.full_name || profile.email).split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('profileAvatarBig').textContent = initials;
+  document.getElementById('profileName').textContent = profile.full_name || '—';
+  document.getElementById('profileEmail').textContent = profile.email;
+  document.getElementById('profileRole').textContent = profile.role;
+  document.getElementById('profileCreated').textContent = 'Member since ' + formatDate(profile.created_at);
+  document.getElementById('editName').value = profile.full_name || '';
+  document.getElementById('editEmail').value = profile.email;
+}
+
+function renderStats(stats) {
+  const el = document.getElementById('profileStats');
+  el.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-card-label">Total</div>
+      <div class="stat-card-value text-brand">${stats.total_predictions || 0}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Normal</div>
+      <div class="stat-card-value" style="color:var(--risk-normal)">${stats.normal_count || 0}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Possible</div>
+      <div class="stat-card-value" style="color:var(--risk-possible)">${stats.possible_count || 0}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">High Risk</div>
+      <div class="stat-card-value" style="color:var(--risk-likely)">${stats.high_risk_count || 0}</div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prediction History — ThalassemiaAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-theme="dark">
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="../index.html" class="sidebar-logo">
+      <span class="logo-dot"></span>
+      ThalassemiaAI
+    </a>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-item" data-path="dashboard/index">
+        <span class="si-icon">📊</span> Dashboard
+      </a>
+      <a href="predict.html" class="sidebar-item" data-path="predict">
+        <span class="si-icon">🔬</span> New Prediction
+      </a>
+      <a href="history.html" class="sidebar-item" data-path="history">
+        <span class="si-icon">📋</span> History
+      </a>
+      <div class="sidebar-sep"></div>
+      <a href="profile.html" class="sidebar-item" data-path="profile">
+        <span class="si-icon">👤</span> Profile
+      </a>
+      <a href="settings.html" class="sidebar-item" data-path="settings">
+        <span class="si-icon">⚙️</span> Settings
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">--</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading…</div>
+          <div class="user-role" id="sidebarUserRole">patient</div>
+        </div>
+      </div>
+      <button class="sidebar-item" id="signOutBtn" style="width:100%;text-align:left;margin-top:4px;">
+        <span class="si-icon">🚪</span> Sign Out
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      <span class="topbar-title">Prediction History</span>
+      <div class="topbar-actions">
+        <button class="theme-toggle"><span class="theme-icon">☀️</span></button>
+        <a href="predict.html" class="btn btn-primary btn-sm">+ New</a>
+      </div>
+    </header>
+
+    <main class="page-content page-content-md">
+      <div class="page-header">
+        <h1>Your Predictions</h1>
+        <p>All past thalassemia analyses. Click a row to expand details.</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="history-filters">
+        <select class="history-filter-select" id="filterDiagnosis">
+          <option value="">All Diagnoses</option>
+        </select>
+        <select class="history-filter-select" id="filterMethod">
+          <option value="">All Methods</option>
+          <option value="manual">Manual</option>
+          <option value="file">File</option>
+          <option value="image">Image</option>
+        </select>
+      </div>
+
+      <!-- List -->
+      <div id="historyList">
+        <!-- Skeletons -->
+        <div class="skeleton" style="height:56px;border-radius:12px;margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:56px;border-radius:12px;margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:56px;border-radius:12px;margin-bottom:10px;"></div>
+      </div>
+
+      <div class="history-load-more hidden" id="loadMoreWrap">
+        <button class="btn btn-ghost" id="loadMoreBtn">Load more</button>
+      </div>
+    </main>
+  </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+const PAGE_SIZE = 20;
+let offset = 0;
+let currentUserId = null;
+let filterDiagnosis = '';
+let filterMethod = '';
+let allDiagnoses = new Set();
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await window._shellReady;
+  if (!user) return;
+  currentUserId = user.id;
+
+  // Load all (for filter options)
+  const { data: allPreds } = await db.predictions.list(currentUserId, { limit: 500, offset: 0 });
+  if (allPreds) {
+    allPreds.forEach(p => allDiagnoses.add(p.diagnosis));
+    const sel = document.getElementById('filterDiagnosis');
+    [...allDiagnoses].sort().forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d;
+      sel.appendChild(opt);
+    });
+  }
+
+  await loadHistory(true);
+
+  // Filter change
+  document.getElementById('filterDiagnosis').addEventListener('change', (e) => {
+    filterDiagnosis = e.target.value;
+    loadHistory(true);
+  });
+  document.getElementById('filterMethod').addEventListener('change', (e) => {
+    filterMethod = e.target.value;
+    loadHistory(true);
+  });
+
+  // Load more
+  document.getElementById('loadMoreBtn').addEventListener('click', () => loadHistory(false));
+});
+
+async function loadHistory(reset = true) {
+  if (reset) {
+    offset = 0;
+    document.getElementById('historyList').innerHTML = `
+      <div class="skeleton" style="height:56px;border-radius:12px;margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:56px;border-radius:12px;margin-bottom:10px;"></div>
+    `;
+  }
+
+  let query = db.client
+    .from('predictions')
+    .select('*')
+    .eq('user_id', currentUserId)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  if (filterDiagnosis) query = query.eq('diagnosis', filterDiagnosis);
+  if (filterMethod) query = query.eq('input_method', filterMethod);
+
+  const { data, error } = await query;
+
+  if (error) {
+    document.getElementById('historyList').innerHTML = `
+      <div class="alert alert-error"><span class="alert-icon">⚠️</span>Failed to load history: ${escapeHtml(error.message)}</div>
+    `;
+    return;
+  }
+
+  const list = document.getElementById('historyList');
+
+  if (reset) list.innerHTML = '';
+
+  if (!data || data.length === 0) {
+    if (reset) {
+      list.innerHTML = `
+        <div class="history-empty">
+          <div class="history-empty-icon">📋</div>
+          <p>No predictions found.</p>
+          <a href="predict.html" class="btn btn-primary">Run First Analysis</a>
+        </div>
+      `;
+    }
+    document.getElementById('loadMoreWrap').classList.add('hidden');
+    return;
+  }
+
+  data.forEach(row => list.appendChild(createHistoryRow(row)));
+
+  offset += data.length;
+  const loadMoreWrap = document.getElementById('loadMoreWrap');
+  if (data.length === PAGE_SIZE) {
+    loadMoreWrap.classList.remove('hidden');
+  } else {
+    loadMoreWrap.classList.add('hidden');
+  }
+}
+
+function createHistoryRow(row) {
+  const el = document.createElement('div');
+  el.className = 'history-row';
+
+  const score = row.thalassemia_score;
+  const cat = getRiskCategory(score || 0);
+
+  el.innerHTML = `
+    <div class="hr-header" onclick="toggleRow(this)">
+      <div class="hr-info">
+        <div class="hr-diagnosis">${escapeHtml(row.diagnosis)}</div>
+        <div class="hr-meta">${formatDateTime(row.created_at)} · ${row.input_method} · Confidence: ${percent(row.confidence)}</div>
+      </div>
+      ${scoreChip(score, cat)}
+      <span class="hr-chevron">▾</span>
+    </div>
+    <div class="hr-body">
+      <div class="hr-details-grid">
+        <div class="hr-detail">
+          <div class="hr-detail-label">HGB</div>
+          <div class="hr-detail-val">${roundNum(row.hgb)} g/dL</div>
+        </div>
+        <div class="hr-detail">
+          <div class="hr-detail-label">MCV</div>
+          <div class="hr-detail-val">${roundNum(row.mcv)} fL</div>
+        </div>
+        <div class="hr-detail">
+          <div class="hr-detail-label">MCH</div>
+          <div class="hr-detail-val">${roundNum(row.mch)} pg</div>
+        </div>
+        <div class="hr-detail">
+          <div class="hr-detail-label">RBC</div>
+          <div class="hr-detail-val">${roundNum(row.rbc)}</div>
+        </div>
+        <div class="hr-detail">
+          <div class="hr-detail-label">Mentzer</div>
+          <div class="hr-detail-val">${roundNum(row.mentzer_index)}</div>
+        </div>
+        <div class="hr-detail">
+          <div class="hr-detail-label">Shine-Lal</div>
+          <div class="hr-detail-val">${roundNum(row.shine_lal)}</div>
+        </div>
+      </div>
+      ${row.recommendation ? `<div class="result-rec" style="margin-bottom:10px;">💊 ${escapeHtml(row.recommendation)}</div>` : ''}
+      ${row.explanation ? `<div class="result-explain">${escapeHtml(row.explanation)}</div>` : ''}
+    </div>
+  `;
+  return el;
+}
+
+function toggleRow(headerEl) {
+  const chevron = headerEl.querySelector('.hr-chevron');
+  const body = headerEl.nextElementSibling;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+</script>
+</body>
+</html>

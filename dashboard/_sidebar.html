@@ -1,0 +1,51 @@
+<!-- ============================================================
+   _sidebar.html — This file is for reference only.
+   The sidebar HTML is duplicated in each dashboard page
+   for simplicity (no server-side templating needed).
+   ============================================================ -->
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <a href="../index.html" class="sidebar-logo">
+    <span class="logo-dot"></span>
+    ThalassemiaAI
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="/dashboard/index.html" class="sidebar-item" data-path="dashboard/index">
+      <span class="si-icon">📊</span>
+      Dashboard
+    </a>
+    <a href="/dashboard/predict.html" class="sidebar-item" data-path="predict">
+      <span class="si-icon">🔬</span>
+      New Prediction
+    </a>
+    <a href="/dashboard/history.html" class="sidebar-item" data-path="history">
+      <span class="si-icon">📋</span>
+      History
+    </a>
+    <div class="sidebar-sep"></div>
+    <a href="/dashboard/profile.html" class="sidebar-item" data-path="profile">
+      <span class="si-icon">👤</span>
+      Profile
+    </a>
+    <a href="/dashboard/settings.html" class="sidebar-item" data-path="settings">
+      <span class="si-icon">⚙️</span>
+      Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebarAvatar">--</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarUserName">Loading…</div>
+        <div class="user-role" id="sidebarUserRole">patient</div>
+      </div>
+    </div>
+    <button class="sidebar-item" id="signOutBtn" style="width:100%;text-align:left;margin-top:4px;">
+      <span class="si-icon">🚪</span>
+      Sign Out
+    </button>
+  </div>
+</aside>
