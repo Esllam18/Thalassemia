@@ -6,5 +6,5 @@ build
 .env.local
 .vercel
 coverage
-config.js
+
 .env.example
