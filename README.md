@@ -68,5 +68,23 @@ thalassemia-app/
     └── settings.html       ← Password, theme settings
 ```
 
+---
 
+## Documentation
 
+- `INSTALLATION.md` — Step-by-step setup guide
+- `PROJECT_STRUCTURE.md` — Every file explained
+- `SUPABASE_SETUP.md` — Database, auth, storage setup
+- `API_DOCUMENTATION.md` — Railway API endpoints
+- `AI_SYSTEM.md` — How the AI works
+- `TROUBLESHOOTING.md` — Common errors and fixes
+- `DEPLOYMENT.md` — How to deploy
+- `.env.example` — Environment variables reference
+
+---
+
+## Important Notes
+
+- This app is for **clinical support purposes only**
+- It is **not a replacement for professional medical advice**
+- Always consult a qualified hematologist for diagnosis confirmation

@@ -363,8 +363,8 @@
    ============================================================ */
 
 // ---- Groq config (vision OCR) ----
-const GROQ_API_URL  = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_API_KEY  = CONFIG.GROQ_API_KEY;
+const GROQ_API_URL  = '/.netlify/functions/groq-ocr';
+// GROQ_API_KEY is no longer used in the browser — handled server-side by the Netlify function
 const GROQ_MODEL    = CONFIG.GROQ_MODEL;
 
 // CBC valid ranges (mirrors the Python API)
@@ -618,7 +618,6 @@ JSON format:
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
       model: GROQ_MODEL,
