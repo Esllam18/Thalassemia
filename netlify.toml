@@ -1,0 +1,6 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  SECRETS_SCAN_OMIT_PATHS = "AI_SYSTEM.md,API_DOCUMENTATION.md,PROJECT_STRUCTURE.md,TROUBLESHOOTING.md,INSTALLATION.md,SUPABASE_SETUP.md"
